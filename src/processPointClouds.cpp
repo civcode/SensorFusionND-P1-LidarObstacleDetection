@@ -123,6 +123,9 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
             std::cout << *pit << " ";
             cluster->points.push_back(cloud->points[*pit]);
         }
+        cluster->width = cluster->points.size();
+        cluster->height =1;
+        cluster->is_dense = true;
         clusters.push_back(cluster);
         cluster_cnt++;
         std::cout << std::endl;
