@@ -80,13 +80,24 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int ma
 	for (int i=0; i<maxIterations; i++) {
 
 		// Randomly sample subset and fit line
-		pcl::RandomSample<pcl::PointXYZ> rand; // {new pcl::RandomSample<pcl::PointXYZ>};
-		rand.setInputCloud(cloud);
-		rand.setSample(2);
+		//pcl::RandomSample<pcl::PointXYZ> rand; // {new pcl::RandomSample<pcl::PointXYZ>};
+		//rand.setInputCloud(cloud);
+		//rand.setSample(2);
 			
 		pcl::PointCloud<pcl::PointXYZ> samples;
-		rand.setSeed(i);
-		rand.filter(samples);
+		//rand.setSeed(i);
+		//rand.filter(samples);
+
+		std::unordered_set<int> random_samples;
+
+		while (random_samples.size() < 2) {
+			random_samples.insert(rand() % (cloud->points.size()));
+		}
+
+		auto it = random_samples.begin();
+		samples.points.push_back(cloud->points[*it]);
+		samples.points.push_back(cloud->points[*(++it)]);
+
 
 		for (auto point : samples) {
 			std::cout << "sample: [" << point.x << ", " << point.y << "]" << std::endl;
@@ -126,7 +137,7 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, int ma
 		for (auto point : *cloud) {
 			float d = fabs(A*point.x + B*point.y + C) / sqrt(pow(A,2) + pow(B, 2));
 			//std::cout << "d = " << d << std::endl;
-			if (d < distanceTol) {
+			if (d <= distanceTol) {
 				//std::cout << "smaller" << std::endl;
 				model.push_back(idx);
 				inlier_cnt++;
