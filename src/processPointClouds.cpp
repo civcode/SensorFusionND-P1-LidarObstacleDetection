@@ -118,9 +118,12 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     int cluster_cnt = 0;
     for (auto it = cluster_indices.begin(); it != cluster_indices.end(); ++it) {
         std::cout << "cluster #" << cluster_cnt << std::endl;
+        typename pcl::PointCloud<PointT>::Ptr cluster {new pcl::PointCloud<PointT>()};
         for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit) {
             std::cout << *pit << " ";
+            cluster->points.push_back(cloud->points[*pit]);
         }
+        clusters.push_back(cluster);
         cluster_cnt++;
         std::cout << std::endl;
     }
