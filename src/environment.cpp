@@ -88,6 +88,24 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
   
 }
 
+void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer) {
+
+    ProcessPointClouds<pcl::PointXYZI>* pointProcessorI = new ProcessPointClouds<pcl::PointXYZI>();
+    pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
+   
+    // Filter input cloud
+    float box_size = 0.5;
+    Eigen::Vector4f crop_point_min (-10.0, -6.0, -2.0, 1.0);
+    Eigen::Vector4f crop_point_max (20.0, 6.0, 4.0, 1.0);
+
+    pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, box_size, crop_point_min, crop_point_max);
+   
+   
+    //renderPointCloud(viewer, inputCloud, "inputCloud", Color(0.7,0.7,0.7));
+    //renderPointCloud(viewer, inputCloud, "inputCloud");
+    renderPointCloud(viewer, filterCloud, "inputCloud");
+}
+
 
 //setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
 void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& viewer)
@@ -120,7 +138,9 @@ int main (int argc, char** argv)
     pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
     CameraAngle setAngle = XY;
     initCamera(setAngle, viewer);
-    simpleHighway(viewer);
+    
+    //simpleHighway(viewer);
+    cityBlock(viewer);
 
     while (!viewer->wasStopped ())
     {

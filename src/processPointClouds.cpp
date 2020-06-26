@@ -27,13 +27,50 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
     // Time segmentation process
     auto startTime = std::chrono::steady_clock::now();
 
-    // TODO:: Fill in the function to do voxel grid point reduction and region based filtering
+    // Fill in the function to do voxel grid point reduction and region based filtering
+    typename pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>());
+    typename pcl::PointCloud<PointT>::Ptr cloud_cropped(new pcl::PointCloud<PointT>());
+
+    // Create filter object
+    pcl::VoxelGrid<PointT> sor;
+    sor.setInputCloud(cloud);
+    sor.setLeafSize(filterRes, filterRes, filterRes);
+    sor.filter(*cloud_filtered);
+
+    // Apply CropBox filter
+    pcl::CropBox<PointT> boxFilter;
+    boxFilter.setMin(minPoint);
+    boxFilter.setMax(maxPoint);
+    boxFilter.setInputCloud(cloud_filtered);
+    boxFilter.filter(*cloud_cropped);
+
+    // Remove points detected on the ego car
+    //typename pcl::PointCloud<PointT>::Ptr car_region(new pcl::PointCloud<PointT>());
+    std::vector<int> indices;
+    //pcl::CropBox<PointT> boxFilter;
+    boxFilter.setMin(Eigen::Vector4f(-1.5, -1.7, -1.0, 1.0));
+    boxFilter.setMax(Eigen::Vector4f(2.6, 1.7, -0.4, 1.0));
+    boxFilter.setInputCloud(cloud_cropped);
+    boxFilter.filter(indices);
+
+    pcl::PointIndices::Ptr car_points {new pcl::PointIndices};
+    for (int idx : indices) {
+        car_points->indices.push_back(idx);
+    }
+
+    pcl::ExtractIndices<PointT> extract;
+    extract.setInputCloud(cloud_cropped);
+    extract.setIndices(car_points);
+    extract.setNegative(true);
+    extract.filter(*cloud_cropped);
+
+
 
     auto endTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     std::cout << "filtering took " << elapsedTime.count() << " milliseconds" << std::endl;
 
-    return cloud;
+    return cloud_cropped;
 
 }
 
@@ -41,9 +78,9 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(ty
 template<typename PointT>
 std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::SeparateClouds(pcl::PointIndices::Ptr inliers, typename pcl::PointCloud<PointT>::Ptr cloud) 
 {
-    // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane
+    // Create two new point clouds, one cloud with obstacles and other with segmented plane
     typename pcl::PointCloud<PointT>::Ptr obstacles {new pcl::PointCloud<PointT>()};
-    typename pcl::PointCloud<PointT>::Ptr road {new pcl::PointCloud<PointT>()};;
+    typename pcl::PointCloud<PointT>::Ptr road {new pcl::PointCloud<PointT>()};
 
     pcl::ExtractIndices<PointT> extract;
     extract.setInputCloud(cloud);
