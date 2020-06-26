@@ -57,7 +57,7 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     //renderPointCloud(viewer, cloud, "some name");
     
     
-    // TODO:: Create point processor
+    // Create point processor
     ProcessPointClouds<pcl::PointXYZ> *pointProcessor = new ProcessPointClouds<pcl::PointXYZ>;
 
     std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr> segmentCloud = pointProcessor->SegmentPlane(cloud, 100, 0.2);
@@ -94,16 +94,52 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloud = pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
    
     // Filter input cloud
-    float box_size = 0.5;
+    float box_size = 0.25;
     Eigen::Vector4f crop_point_min (-10.0, -6.0, -2.0, 1.0);
-    Eigen::Vector4f crop_point_max (20.0, 6.0, 4.0, 1.0);
+    Eigen::Vector4f crop_point_max (30.0, 6.0, 4.0, 1.0);
+    //float box_size = 0.1;
+    //Eigen::Vector4f crop_point_min (-20.0, -16.0, -2.0, 1.0);
+    //Eigen::Vector4f crop_point_max (40.0, 16.0, 4.0, 1.0);
 
     pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, box_size, crop_point_min, crop_point_max);
    
+    // Segmentation (RANSAC plane; remaining points)
+    int max_iterations = 100;
+    float distance_threshold = 0.2; //RANSAC plane segmentation
+    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->SegmentPlane(filterCloud, max_iterations, distance_threshold);
+
+    //renderPointCloud(viewer, segmentCloud.first, "obstacleCloud", Color(1,0,0));
+    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
+    
+    // Clustering
+    float cluster_tolerance = 0.5;
+    int clustering_min_size = 10;
+    int clustering_max_size = 1000;
+    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->Clustering(segmentCloud.first, cluster_tolerance, clustering_min_size, clustering_max_size);
+
+    int clusterId = 0;
+    std::vector<Color> colors = { Color(1,0,0), 
+                                  Color(1,1,0), 
+                                  Color(0,1,1), 
+                                  Color(1,0,1),
+                                  Color(0,0,1) };
+
+    for (pcl::PointCloud<pcl::PointXYZI>::Ptr cluster : cloudClusters) {
+
+        std::cout << "cluster size ";
+        pointProcessorI->numPoints(cluster);
+        renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(clusterId), colors[clusterId%colors.size()]);
+
+        Box box = pointProcessorI->BoundingBox(cluster);
+        renderBox(viewer, box, clusterId);
+
+        clusterId++;
+    }
+
    
     //renderPointCloud(viewer, inputCloud, "inputCloud", Color(0.7,0.7,0.7));
     //renderPointCloud(viewer, inputCloud, "inputCloud");
-    renderPointCloud(viewer, filterCloud, "inputCloud");
+    //renderPointCloud(viewer, filterCloud, "inputCloud");
 }
 
 
