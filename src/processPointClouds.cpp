@@ -150,7 +150,7 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     ec.setInputCloud(cloud);
     ec.extract(cluster_indices);
 
-    std::cout << "cluster_indices.size() = " << cluster_indices.size() << std::endl;
+    //std::cout << "cluster_indices.size() = " << cluster_indices.size() << std::endl;
     // cluster_indices is a vector of PointIndices which contain the vector indices
     int cluster_cnt = 0;
     for (auto it = cluster_indices.begin(); it != cluster_indices.end(); ++it) {
