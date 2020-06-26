@@ -165,7 +165,9 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
     std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->SegmentPlane(filterCloud, max_iterations, distance_threshold);
 
     //renderPointCloud(viewer, segmentCloud.first, "obstacleCloud", Color(1,0,0));
-    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,1,0));
+    
+    // Render ground plane
+    renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,0.7,0));
     
     // Clustering
     float cluster_tolerance = 0.4;
