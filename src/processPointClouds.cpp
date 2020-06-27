@@ -233,3 +233,253 @@ std::vector<boost::filesystem::path> ProcessPointClouds<PointT>::streamPcd(std::
     return paths;
 
 }
+
+
+// Own implementations for Lidar Obstacle Detction Project
+
+template<typename PointT>
+std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::mySegmentPlane(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceThreshold)
+{
+    // Time segmentation process
+    auto startTime = std::chrono::steady_clock::now();
+	
+    // Get inliers from RANSAC plane fitting
+    std::unordered_set<int> inlier_idices = myRansacPlane(cloud, maxIterations, distanceThreshold);
+
+     if (inlier_idices.size() == 0) {
+        std::cout << "Could not estimate a plane model for the given data." << std::endl;
+    }
+
+    // Copy inliers to pcl object
+    pcl::PointIndices::Ptr inliers {new pcl::PointIndices};
+    for (int idx : inlier_idices) {
+        inliers->indices.push_back(idx);
+
+    }
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    std::cout << "plane segmentation took " << elapsedTime.count() << " milliseconds" << std::endl;
+
+    std::pair<typename pcl::PointCloud<PointT>::Ptr, typename pcl::PointCloud<PointT>::Ptr> segResult = SeparateClouds(inliers, cloud);
+
+    return segResult;
+}
+
+
+template<typename PointT>
+std::unordered_set<int> ProcessPointClouds<PointT>::myRansacPlane(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceTol)
+{
+	std::unordered_set<int> inliersResult;
+	srand(time(NULL));
+	
+	// Fill in this function
+	std::vector<std::vector<float> > params; //structure: [[A1, B1, C1, inlier_cnt], ...]
+
+	// For max iterations 
+	while (maxIterations--) {
+			
+		std::unordered_set<int> inliers;
+
+		while (inliers.size() < 3) {
+			inliers.insert(rand() % (cloud->points.size()));
+		}
+
+		// Fit line model
+		auto it = inliers.begin();
+		float x1 = cloud->points[*it].x;
+		float y1 = cloud->points[*it].y;
+		float z1 = cloud->points[*it].z;
+		it++;
+		float x2 = cloud->points[*it].x;
+		float y2 = cloud->points[*it].y;
+		float z2 = cloud->points[*it].z;
+		it++;
+		float x3 = cloud->points[*it].x;
+		float y3 = cloud->points[*it].y;
+		float z3 = cloud->points[*it].z;
+
+		// parameters of the cross product 
+		float cp_x = (y2-y1)*(z3-z1)-(z2-z1)*(y3-y1); 
+		float cp_y = (z2-z1)*(x3-x1)-(x2-x1)*(z3-z1);  
+		float cp_z = (x2-x1)*(y3-y1)-(y2-y1)*(x3-x1);
+		
+		float A = cp_x;
+		float B = cp_y;
+		float C = cp_z;
+		float D = -(cp_x*x1 + cp_y*y1 + cp_z*z1);
+		
+		// Measure distance between every point and fitted line
+		// If distance is smaller than threshold count it as inlier
+		int inlier_cnt = 0;
+		for (int idx=0; idx<cloud->points.size(); idx++) {
+			float x = cloud->points[idx].x;
+			float y = cloud->points[idx].y;
+			float z = cloud->points[idx].z;
+
+			float d = fabs(A*x + B*y + C*z + D) / sqrt(pow(A,2) + pow(B, 2) + pow(C,2));
+
+			if (d <= distanceTol) {
+				//std::cout << "smaller" << std::endl;
+				inliers.insert(idx);
+				inlier_cnt++;
+			}
+		}
+
+		if (inliers.size() > inliersResult.size()) {
+			inliersResult = inliers;
+		}
+	}
+	
+	return inliersResult;
+
+}
+
+template<typename PointT>
+std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::myClustering(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize) {
+
+    // Time clustering process
+    auto startTime = std::chrono::steady_clock::now();
+
+    std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
+
+    // Fill in the function to perform euclidean clustering to group detected obstacles
+    typename pcl::search::KdTree<PointT>::Ptr tree {new pcl::search::KdTree<PointT>()};
+    tree->setInputCloud(cloud);
+
+    std::vector<pcl::PointIndices> cluster_indices;
+    pcl::EuclideanClusterExtraction<PointT> ec;
+    ec.setClusterTolerance(clusterTolerance);
+    ec.setMinClusterSize(minSize);
+    ec.setMaxClusterSize(maxSize);
+    ec.setSearchMethod(tree);
+    ec.setInputCloud(cloud);
+    ec.extract(cluster_indices);
+
+    //std::cout << "cluster_indices.size() = " << cluster_indices.size() << std::endl;
+    // cluster_indices is a vector of PointIndices which contain the vector indices
+    int cluster_cnt = 0;
+    for (auto it = cluster_indices.begin(); it != cluster_indices.end(); ++it) {
+        //std::cout << "cluster #" << cluster_cnt << std::endl;
+        typename pcl::PointCloud<PointT>::Ptr cluster {new pcl::PointCloud<PointT>()};
+        for (auto pit = it->indices.begin(); pit != it->indices.end(); ++pit) {
+            //std::cout << *pit << " ";
+            cluster->points.push_back(cloud->points[*pit]);
+        }
+        cluster->width = cluster->points.size();
+        cluster->height =1;
+        cluster->is_dense = true;
+        //clusters.push_back(cluster);
+        cluster_cnt++;
+        //std::cout << std::endl;
+    }
+
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    std::cout << "clustering took " << elapsedTime.count() << " milliseconds and found " << clusters.size() << " clusters" << std::endl;
+
+
+
+    // Build KD Tree
+	KdTree* mytree = new KdTree;
+  
+    // Iterate over point cloud and enter points to the tree
+    std::vector<std::vector<float>> points;
+    int id = 0;
+    for (auto it = cloud->begin(); it != cloud->end(); ++it) {
+        std::vector<float> point;
+        point.push_back(it->x);
+        point.push_back(it->y);
+        point.push_back(it->z);
+        points.push_back(point);
+        //std::cout << "points: " << it->x << ", " << it->y << ", " << it->z << std::endl;
+        mytree->insert(point, id++);
+    }
+
+    // Call Euclidean clustering
+  	std::vector<std::vector<int>> myclusters = myEuclideanCluster(points, mytree, clusterTolerance);
+
+    // Create vector of point clouds; each point cloud is a cluster 
+  	int clusterId = 0;
+  	for(std::vector<int> cluster : myclusters) {
+
+  		typename pcl::PointCloud<PointT>::Ptr clusterCloud(new pcl::PointCloud<PointT>());
+  		for(int idx : cluster) {
+            PointT p;
+            p.x = points[idx][0];
+            p.y = points[idx][1];
+            p.z = points[idx][2];
+            //p.intensity = 1.0;
+  			//clusterCloud->points.push_back(typename PointT(points[idx][0], points[idx][1], points[idx][2], 1.0));
+            clusterCloud->points.push_back(p);
+
+            //clusterCloud->push_back(PointT(points[idx][0]));
+            //clusterCloud->points.push_back(cloud[idx]);
+        }
+        //clusterCloud->width = cluster->points.size();
+        clusterCloud->width = cluster.size();
+        clusterCloud->height = 1;
+        clusterCloud->is_dense = true;
+        clusters.push_back(clusterCloud);
+          //renderPointCloud(viewer, clusterCloud,"cluster"+std::to_string(clusterId),colors[clusterId%3]);
+  		clusterId++;
+  	}
+  	// if(clusters.size()==0)
+  	// 	//renderPointCloud(viewer,cloud,"data");
+	
+
+
+
+    return clusters;
+
+}
+
+template<typename PointT>
+std::vector<std::vector<int>> ProcessPointClouds<PointT>::myEuclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol)
+{
+
+	// Find a list of indices for each cluster
+
+	std::vector<std::vector<int>> clusters;
+	std::vector<bool> is_processed(points.size(), false);
+
+	std::cout << "number of points: " << points.size() << std::endl;
+	for (int id=0; id<points.size(); id++) {
+		if (!is_processed[id]) {
+			std::vector<int> cluster;
+			//std::cout << "from eucliden call proximity\n";
+			//std::cout << "id: " << id << std::endl;
+			proximity(id, points, cluster, is_processed, tree, distanceTol);
+			clusters.push_back(cluster);
+		}
+	}
+
+	return clusters;
+
+}
+
+template<typename PointT>
+void ProcessPointClouds<PointT>::proximity(int id, const std::vector<std::vector<float>>& points, std::vector<int>& cluster, std::vector<bool>& is_processed, KdTree* tree, float distanceTol) {
+
+	is_processed[id] = true;
+
+	cluster.push_back(id);
+
+	//std::vector<float> point = points[id];
+	std::vector<int> neighbours = tree->search(points[id], distanceTol);
+	//std::cout << "number of neighbours: " << neighbours.size() << std::endl;
+
+	for (auto id : neighbours) {
+		if (!is_processed[id]) {
+			//std::cout << "from poriximity call proximity\n";
+			//std::cout << "id: " << id << std::endl;
+			proximity(id, points, cluster, is_processed, tree, distanceTol);
+		}
+	}
+
+
+
+}
+
+

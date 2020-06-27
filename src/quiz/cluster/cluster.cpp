@@ -100,7 +100,7 @@ void proximity(int id, const std::vector<std::vector<float>>& points, std::vecto
 std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol)
 {
 
-	// TODO: Fill out this function to return list of indices for each cluster
+	// Fill out this function to return list of indices for each cluster
 
 	std::vector<std::vector<int>> clusters;
 	std::vector<bool> is_processed(points.size(), false);
@@ -168,7 +168,8 @@ int main ()
   	{
   		pcl::PointCloud<pcl::PointXYZ>::Ptr clusterCloud(new pcl::PointCloud<pcl::PointXYZ>());
   		for(int indice: cluster)
-  			clusterCloud->points.push_back(pcl::PointXYZ(points[indice][0],points[indice][1],0));
+  			//clusterCloud->points.push_back(pcl::PointXYZ(points[indice][0],points[indice][1],0));
+			clusterCloud->push_back(pcl::PointXYZI(points[indice][0],points[indice][1],0));
   		renderPointCloud(viewer, clusterCloud,"cluster"+std::to_string(clusterId),colors[clusterId%3]);
   		++clusterId;
   	}
