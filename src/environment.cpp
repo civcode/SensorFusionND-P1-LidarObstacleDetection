@@ -204,7 +204,7 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
 void myCityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointClouds<pcl::PointXYZI>* pointProcessorI, const pcl::PointCloud<pcl::PointXYZI>::Ptr& inputCloud) {
    
     // Filter input cloud
-    float box_size = 0.25;
+    float box_size = 0.25; //0.25
     Eigen::Vector4f crop_point_min (-10.0, -6.0, -2.0, 1.0);
     Eigen::Vector4f crop_point_max (30.0, 6.0, 4.0, 1.0);
     //float box_size = 0.1;
@@ -214,7 +214,7 @@ void myCityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointClo
     pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud = pointProcessorI->FilterCloud(inputCloud, box_size, crop_point_min, crop_point_max);
    
     // Segmentation (RANSAC plane; remaining points)
-    int max_iterations = 100;
+    int max_iterations = 20;
     float distance_threshold = 0.2; //RANSAC plane segmentation
     std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->mySegmentPlane(filterCloud, max_iterations, distance_threshold);
 
@@ -222,7 +222,7 @@ void myCityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointClo
     renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,0.7,0));
     
     // Clustering
-    float cluster_tolerance = 0.4;
+    float cluster_tolerance = 0.4; //0.4
     int clustering_min_size = 8;
     int clustering_max_size = 1000;
     std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters = pointProcessorI->myClustering(segmentCloud.first, cluster_tolerance, clustering_min_size, clustering_max_size);

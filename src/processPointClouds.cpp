@@ -399,7 +399,7 @@ std::vector<std::vector<int>> ProcessPointClouds<PointT>::myEuclideanCluster(con
 	std::vector<std::vector<int>> clusters;
 	std::vector<bool> is_processed(points.size(), false);
 
-	std::cout << "number of points: " << points.size() << std::endl;
+	//std::cout << "number of points: " << points.size() << std::endl;
 	for (int id=0; id<points.size(); id++) {
 		if (!is_processed[id]) {
 			std::vector<int> cluster;

@@ -1,6 +1,6 @@
 /* \author Aaron Brown */
 // Quiz on implementing kd tree
-#define K_DIM 1
+#define K_DIM 3
 
 // Structure to represent node of kd tree
 struct Node
@@ -37,10 +37,6 @@ struct KdTree {
 		insertHelper(&root, 0, point, id);
 	}
 
-	void insertVector(std::vector<std::vector<float>>& points) {
-
-	}
-
 	void searchHelper(std::vector<float>target, Node* node, uint depth, float distanceTol, std::vector<int>& ids) {
 
 		auto isInBox = [](std::vector<float>target, float distanceTol, Node *node) -> bool {
@@ -75,13 +71,38 @@ struct KdTree {
 				}
 			}
 
-			if (target[depth%K_DIM]-distanceTol <= node->point[depth%K_DIM])
-				searchHelper(target, node->left, depth++, distanceTol, ids);
-			if (target[depth%K_DIM]+distanceTol >= node->point[depth%K_DIM])
-				searchHelper(target, node->right, depth++, distanceTol, ids);
+			if ((target[depth%K_DIM]-distanceTol) <= node->point[depth%K_DIM])
+				searchHelper(target, node->left, depth+1, distanceTol, ids);
+			if ((target[depth%K_DIM]+distanceTol) >= node->point[depth%K_DIM])
+				searchHelper(target, node->right, depth+1, distanceTol, ids);
 		}
 
 	}
+
+	void searchHelperX(const std::vector<float>& target, Node* node, int depth, float distanceTol, std::vector<int>& ids) {
+		if (nullptr != node) {
+		float dx = fabs(node->point[0] - target[0]);
+		float dy = fabs(node->point[1] - target[1]);
+
+				if (dx <= distanceTol && dy <= distanceTol) {
+					float distance = std::hypotf(dx, dy);
+					if (distance <= distanceTol) {
+						ids.push_back((node->id));
+					}
+				}
+
+				// Check across boundary
+				if ((target[depth % K_DIM] - distanceTol) < node->point[depth % K_DIM]) {
+					searchHelperX(target, node->left, depth + 1, distanceTol, ids);
+				}
+				if ((target[depth % K_DIM] + distanceTol) > node->point[depth % K_DIM]) {
+					searchHelperX(target, node->right, depth + 1, distanceTol, ids);
+				}
+			}
+		}
+
+
+
 
 	std::vector<int> search(std::vector<float> target, float distanceTol) 
 	{
