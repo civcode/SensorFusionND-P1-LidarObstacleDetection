@@ -39,24 +39,35 @@ struct KdTree {
 
 	void searchHelper(std::vector<float>target, Node* node, uint depth, float distanceTol, std::vector<int>& ids) {
 
+		// auto isInBox = [](std::vector<float>target, float distanceTol, Node *node) -> bool {
+		// 	float box_x_min = target[0] - distanceTol;
+		// 	float box_x_max = target[0] + distanceTol;
+		// 	float box_y_min = target[1] - distanceTol;
+		// 	float box_y_max = target[1] + distanceTol;
+		// 	float box_z_min = target[2] - distanceTol;
+		// 	float box_z_max = target[2] + distanceTol;
+
+		// 	float p_x = node->point[0];
+		// 	float p_y = node->point[1];
+		// 	float p_z = node->point[2];
+
+		// 	return (box_x_min <= p_x && 
+		// 			box_x_max >= p_x && 
+		// 			box_y_min <= p_y && 
+		// 			box_y_max >= p_y &&
+		// 			box_z_min <= p_z && 
+		// 			box_z_max >= p_z );
+		// };
+
 		auto isInBox = [](std::vector<float>target, float distanceTol, Node *node) -> bool {
-			float box_x_min = target[0] - distanceTol;
-			float box_x_max = target[0] + distanceTol;
-			float box_y_min = target[1] - distanceTol;
-			float box_y_max = target[1] + distanceTol;
-			float box_z_min = target[2] - distanceTol;
-			float box_z_max = target[2] + distanceTol;
 
-			float p_x = node->point[0];
-			float p_y = node->point[1];
-			float p_z = node->point[2];
+			float dx = fabs(node->point[0] - target[0]);
+			float dy = fabs(node->point[1] - target[1]);
+			float dz = fabs(node->point[2] - target[2]);
 
-			return (box_x_min <= p_x && 
-					box_x_max >= p_x && 
-					box_y_min <= p_y && 
-					box_y_max >= p_y &&
-					box_z_min <= p_z && 
-					box_z_max >= p_z );
+			return (dx <= distanceTol && 
+					dy <= distanceTol && 
+					dz <= distanceTol);
 		};
 
 		if (node != nullptr) {
