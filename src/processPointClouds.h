@@ -57,7 +57,7 @@ public:
 
     std::unordered_set<int> myRansacPlane(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations, float distanceTol);
 
-    std::vector<std::vector<int>> myEuclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol);
+    std::vector<std::vector<int>> myEuclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol, int minSize, int maxSize);
 
     void proximity(int id, const std::vector<std::vector<float>>& points, std::vector<int>& cluster, std::vector<bool>& is_processed, KdTree* tree, float distanceTol);
   

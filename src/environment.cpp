@@ -218,8 +218,6 @@ void myCityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointClo
     float distance_threshold = 0.2; //RANSAC plane segmentation
     std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud = pointProcessorI->mySegmentPlane(filterCloud, max_iterations, distance_threshold);
 
-    //renderPointCloud(viewer, segmentCloud.first, "obstacleCloud", Color(1,0,0));
-    
     // Render ground plane
     renderPointCloud(viewer, segmentCloud.second, "planeCloud", Color(0,0.7,0));
     
@@ -238,8 +236,6 @@ void myCityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointClo
 
     for (pcl::PointCloud<pcl::PointXYZI>::Ptr cluster : cloudClusters) {
 
-        //std::cout << "cluster size ";
-        //pointProcessorI->numPoints(cluster);
         renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(clusterId), colors[clusterId%colors.size()]);
 
         Box box = pointProcessorI->BoundingBox(cluster);
@@ -247,11 +243,6 @@ void myCityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointClo
 
         clusterId++;
     }
-
-   
-    //renderPointCloud(viewer, inputCloud, "inputCloud", Color(0.7,0.7,0.7));
-    //renderPointCloud(viewer, inputCloud, "inputCloud");
-    //renderPointCloud(viewer, filterCloud, "inputCloud");
 }
 
 
