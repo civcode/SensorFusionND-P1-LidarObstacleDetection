@@ -300,7 +300,8 @@ int main (int argc, char** argv)
 
         // Load pcd and run obstacle detection process
         inputCloudI = pointProcessorI->loadPcd((*streamIterator).string());
-        myCityBlock(viewer, pointProcessorI, inputCloudI);
+        //myCityBlock(viewer, pointProcessorI, inputCloudI);
+        cityBlock(viewer, pointProcessorI, inputCloudI);
 
         streamIterator++;
         if(streamIterator == stream.end())
