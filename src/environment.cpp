@@ -17,7 +17,7 @@ std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer
     Car car3( Vect3(-12,4,0), Vect3(4,2,2), Color(0,0,1), "car3");
   
     std::vector<Car> cars;
-    cars.push_back(egoCar);
+    //cars.push_back(egoCar);
     cars.push_back(car1);
     cars.push_back(car2);
     cars.push_back(car3);
@@ -50,11 +50,11 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = lidar->scan();
 
-    //void renderRays(pcl::visualization::PCLVisualizer::Ptr& viewer, const Vect3& origin, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
-    //renderRays(viewer, lidar->position, cloud);
+    // void renderRays(pcl::visualization::PCLVisualizer::Ptr& viewer, const Vect3& origin, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
+    // renderRays(viewer, lidar->position, cloud);
     
-    //void renderPointCloud(pcl::visualization::PCLVisualizer::Ptr& viewer, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, std::string name, Color color = Color(1,1,1));
-    //renderPointCloud(viewer, cloud, "some name");
+    void renderPointCloud(pcl::visualization::PCLVisualizer::Ptr& viewer, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, std::string name, Color color = Color(1,1,1));
+    renderPointCloud(viewer, cloud, "some name");
     
     
     // Create point processor
@@ -284,28 +284,28 @@ int main (int argc, char** argv)
     auto streamIterator = stream.begin();
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI;
     
-    //simpleHighway(viewer);
+    simpleHighway(viewer);
     //cityBlock(viewer);
 
-    // while (!viewer->wasStopped ())
-    // {
-    //     viewer->spinOnce ();
-    // } 
+    while (!viewer->wasStopped ())
+    {
+        viewer->spinOnce ();
+    } 
 
-    while (!viewer->wasStopped()) {
+    // while (!viewer->wasStopped()) {
 
-        // Clear viewer
-        viewer->removeAllPointClouds();
-        viewer->removeAllShapes();
+    //     // Clear viewer
+    //     viewer->removeAllPointClouds();
+    //     viewer->removeAllShapes();
 
-        // Load pcd and run obstacle detection process
-        inputCloudI = pointProcessorI->loadPcd((*streamIterator).string());
-        myCityBlock(viewer, pointProcessorI, inputCloudI);
+    //     // Load pcd and run obstacle detection process
+    //     inputCloudI = pointProcessorI->loadPcd((*streamIterator).string());
+    //     myCityBlock(viewer, pointProcessorI, inputCloudI);
 
-        streamIterator++;
-        if(streamIterator == stream.end())
-            streamIterator = stream.begin();
+    //     streamIterator++;
+    //     if(streamIterator == stream.end())
+    //         streamIterator = stream.begin();
 
-        viewer->spinOnce();
-    }
+    //     viewer->spinOnce();
+    // }
 }
