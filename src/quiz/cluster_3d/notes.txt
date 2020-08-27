@@ -1,0 +1,45 @@
+
+	// return a list of point ids in the tree that are within distance of target
+	std::vector<int> search(std::vector<float> target, float distanceTol)
+	{
+		std::vector<int> ids;
+
+		// define box
+		float box_x_min = target[0] - distanceTol;
+		float box_x_max = target[0] + distanceTol;
+		float box_y_min = target[1] - distanceTol;
+		float box_y_max = target[1] + distanceTol;
+
+		std::cout << "target = [" << target[0] << ", " << target[1] << "]" << std::endl;
+		std::cout << "distanceTol = " << distanceTol << std::endl;
+		std::cout << "box corrds: [" << box_x_min << ", " << box_x_max << ", " << box_y_min << ", " << box_y_max << "]\n";
+
+		// check if node is within box
+		float p_x = root->point[0];
+		float p_y = root->point[1];
+		std::cout << "node = [" << p_x << ", " << p_y << "]" << std::endl;
+		if (box_x_min <= p_x &&
+			box_x_max >= p_x &&
+			box_y_min <= p_y &&
+			box_y_max >= p_y)
+		{
+
+			// calculate distance
+			float d = sqrt(pow(target[0] - p_x, 2) + pow(target[1] - p_y, 2));
+			std::cout << "d = " << d << std::endl;
+			if (d <= distanceTol)
+			{
+				ids.push_back(root->id);
+			}
+		}
+
+		return ids;
+	}
+
+
+target = [-6, 7]
+distanceTol = 12
+box corrds: [-18, 6, -5, 19]
+
+
+
